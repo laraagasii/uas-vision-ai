@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Object Detection | UAS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(to right, #f87171, #facc15); -webkit-background-clip: text; color: transparent; }
+        .nav-active { border-bottom: 2px solid #f87171; color: #f87171; }
+        .btn-active { background-color: #f43f5e; color: white; }
+        .btn-inactive { background-color: #334155; color: #cbd5e1; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="glass-panel sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="font-bold text-xl tracking-wide text-white">Vision<span class="text-rose-500">AI</span></div>
+            <div class="flex gap-6 text-sm font-semibold text-slate-300">
+                <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-active pb-1 hover:text-white transition-colors">Beranda</button>
+                <button onclick="switchTab('prediksi')" id="nav-prediksi" class="pb-1 hover:text-white transition-colors">Live Prediction</button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="pb-1 hover:text-white transition-colors">Dashboard</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-6 md:p-8 pt-10">
+
+        <section id="page-beranda" class="block animate-fade-in">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 gradient-text py-2">Melihat Dunia dengan AI</h1>
+                <p class="text-lg text-slate-400 max-w-2xl mx-auto">Sebuah sistem pendeteksi objek cerdas berbasis YOLOv8 yang mampu mengenali berbagai entitas dalam gambar secara real-time.</p>
+            </div>
+            <div class="glass-panel p-8 rounded-2xl max-w-2xl mx-auto text-center border-t-4 border-t-rose-500">
+                <h2 class="text-2xl font-bold text-white mb-2">Hanifah Larama Agasi</h2>
+                <p class="text-rose-400 font-medium mb-6">2311531002</p>
+                <p class="text-slate-300 leading-relaxed text-sm">Proyek ini merupakan implementasi Tugas Besar Mata Kuliah Image Processing. Fokus utama pengembangan adalah menciptakan "AI Product" interaktif yang tidak hanya memiliki model tangguh, tetapi juga dibalut dengan antarmuka yang ramah pengguna.</p>
+            </div>
+        </section>
+
+        <section id="page-prediksi" class="hidden animate-fade-in">
+            <h2 class="text-3xl font-bold mb-6 text-white text-center">Object Scanner 📸</h2>
+            
+            <div class="glass-panel p-6 md:p-8 rounded-2xl max-w-4xl mx-auto flex flex-col gap-8">
+                
+                <div class="flex justify-center gap-4">
+                    <button onclick="setMode('upload')" id="btnModeUpload" class="btn-active px-6 py-2 rounded-full font-bold transition-all shadow-lg">📂 Upload File</button>
+                    <button onclick="setMode('webcam')" id="btnModeWebcam" class="btn-inactive px-6 py-2 rounded-full font-bold transition-all">📷 Buka Webcam</button>
+                </div>
+
+                <div class="border border-dashed border-slate-600 p-6 rounded-xl bg-slate-800/30">
+                    
+                    <div id="uploadSection" class="flex flex-col md:flex-row gap-4 items-center justify-between block">
+                        <div class="flex-1 w-full">
+                            <input type="file" id="imageInput" title="Upload Gambar" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:font-bold file:bg-rose-500 file:text-white hover:file:bg-rose-600 transition-all cursor-pointer">
+                        </div>
+                        <button onclick="analyzeUpload()" class="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 font-bold text-white hover:scale-105 transition-transform shadow-lg shadow-rose-500/30 whitespace-nowrap">
+                            Analyze Upload 🚀
+                        </button>
+                    </div>
+
+                    <div id="webcamSection" class="hidden flex-col items-center gap-4 w-full">
+                        <video id="webcamVideo" autoplay playsinline class="w-full max-w-lg rounded-xl bg-black border border-slate-700"></video>
+                        <div class="flex gap-4">
+                            <button id="btnCapture" onclick="analyzeWebcam()" class="px-8 py-3 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 font-bold text-white hover:scale-105 transition-transform shadow-lg shadow-rose-500/30 whitespace-nowrap">
+                                📸 Capture & Analyze
+                            </button>
+                            <button id="btnRetake" onclick="retakeWebcam()" class="hidden px-8 py-3 rounded-full bg-slate-600 font-bold text-white hover:bg-slate-500 transition-transform shadow-lg whitespace-nowrap">
+                                🔄 Ulangi Foto
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="textResultContainer" class="hidden bg-slate-800 border-l-4 border-rose-500 p-4 rounded-r-xl">
+                    <p class="text-sm text-slate-400 mb-1">Objek Terdeteksi:</p>
+                    <p id="textResult" class="text-lg font-bold text-rose-400 capitalize"></p>
+                </div>
+
+                <div class="w-full bg-slate-900 rounded-xl flex items-center justify-center overflow-hidden border border-slate-700 relative min-h-[300px]">
+                    <img id="imgDisplay" class="object-contain w-full h-auto max-h-[70vh] hidden" alt="Image Viewer">
+                    <span id="placeholderDisplay" class="text-slate-500 text-sm">Preview gambar akan muncul di sini</span>
+                    
+                    <div id="loading" class="hidden absolute inset-0 bg-slate-900/80 flex flex-col gap-3 items-center justify-center backdrop-blur-sm">
+                        <div class="w-10 h-10 border-4 border-slate-600 border-t-rose-500 rounded-full animate-spin"></div>
+                        <span class="text-rose-500 font-semibold animate-pulse">AI is scanning...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-dashboard" class="hidden animate-fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Analytics Dashboard 📊</h2>
+                <p class="text-slate-400">Pemantauan metrik performa model selama sesi berlangsung.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="glass-panel p-8 rounded-2xl text-center border-b-4 border-b-blue-500">
+                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">📁</div>
+                    <p class="text-sm text-slate-400 mb-1 font-semibold uppercase tracking-wider">Total Gambar Diuji</p>
+                    <p class="text-4xl font-bold text-white" id="statTotal">0</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl text-center border-b-4 border-b-rose-500">
+                    <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">🎯</div>
+                    <p class="text-sm text-slate-400 mb-1 font-semibold uppercase tracking-wider">Avg. Confidence</p>
+                    <p class="text-4xl font-bold text-rose-400" id="statConf">0%</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl text-center border-b-4 border-b-orange-500">
+                    <div class="w-12 h-12 bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">⚡</div>
+                    <p class="text-sm text-slate-400 mb-1 font-semibold uppercase tracking-wider">Inference Time</p>
+                    <p class="text-4xl font-bold text-orange-400" id="statTime">0 s</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-active', 'text-rose-500'));
+            
+            document.getElementById('page-' + tabName).classList.remove('hidden');
+            document.getElementById('nav-' + tabName).classList.add('nav-active', 'text-rose-500');
+            
+            if(tabName !== 'prediksi') stopWebcam();
+        }
+
+        let totalTested = 0;
+        let stream = null;
+        const video = document.getElementById('webcamVideo');
+        const imgDisplay = document.getElementById('imgDisplay');
+        const textResultContainer = document.getElementById('textResultContainer');
+        const textResult = document.getElementById('textResult');
+
+        function setMode(mode) {
+            const btnUp = document.getElementById('btnModeUpload');
+            const btnCam = document.getElementById('btnModeWebcam');
+            const secUp = document.getElementById('uploadSection');
+            const secCam = document.getElementById('webcamSection');
+
+            // Reset state UI
+            imgDisplay.classList.add('hidden');
+            textResultContainer.classList.add('hidden');
+            document.getElementById('placeholderDisplay').classList.remove('hidden');
+
+            if (mode === 'upload') {
+                btnUp.className = "btn-active px-6 py-2 rounded-full font-bold transition-all shadow-lg";
+                btnCam.className = "btn-inactive px-6 py-2 rounded-full font-bold transition-all";
+                secUp.classList.remove('hidden');
+                secUp.classList.add('flex');
+                secCam.classList.add('hidden');
+                secCam.classList.remove('flex');
+                stopWebcam();
+            } else {
+                btnCam.className = "btn-active px-6 py-2 rounded-full font-bold transition-all shadow-lg";
+                btnUp.className = "btn-inactive px-6 py-2 rounded-full font-bold transition-all";
+                secCam.classList.remove('hidden');
+                secCam.classList.add('flex');
+                secUp.classList.add('hidden');
+                secUp.classList.remove('flex');
+                startWebcam();
+                retakeWebcam(); // Pastikan tombol kembali ke awal saat pindah mode
+            }
+        }
+
+        async function startWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Gagal mengakses webcam! Pastikan browser diizinkan menggunakan kamera.");
+            }
+        }
+
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // Fitur Baru: Kembalikan kamera untuk ambil foto ulang
+        function retakeWebcam() {
+            video.classList.remove('hidden');
+            document.getElementById('btnCapture').classList.remove('hidden');
+            document.getElementById('btnRetake').classList.add('hidden');
+            
+            imgDisplay.classList.add('hidden');
+            textResultContainer.classList.add('hidden');
+            document.getElementById('placeholderDisplay').classList.remove('hidden');
+        }
+
+        document.getElementById('imageInput').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                imgDisplay.src = URL.createObjectURL(this.files[0]);
+                imgDisplay.classList.remove('hidden');
+                document.getElementById('placeholderDisplay').classList.add('hidden');
+                textResultContainer.classList.add('hidden');
+            }
+        });
+
+        async function processAPI(formData) {
+            document.getElementById('loading').classList.remove('hidden');
+            textResultContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                imgDisplay.src = "data:image/jpeg;base64," + data.gambar_hasil_b64;
+                imgDisplay.classList.remove('hidden');
+                document.getElementById('placeholderDisplay').classList.add('hidden');
+                
+                textResult.innerText = data.keterangan_objek;
+                textResultContainer.classList.remove('hidden');
+                
+                totalTested++;
+                document.getElementById('statTotal').innerText = totalTested;
+                document.getElementById('statConf').innerText = data.confidence_score_persen + "%";
+                document.getElementById('statTime').innerText = data.waktu_inferensi_detik + " s";
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan saat AI memproses gambar.");
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        function analyzeUpload() {
+            const input = document.getElementById('imageInput');
+            if (!input.files[0]) return alert("Pilih gambar dulu ya!");
+            
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+            processAPI(formData);
+        }
+
+        function analyzeWebcam() {
+            if (!stream) return alert("Webcam belum aktif!");
+            
+            // Sembunyikan video live, ubah tombol jadi mode Retake
+            video.classList.add('hidden');
+            document.getElementById('btnCapture').classList.add('hidden');
+            document.getElementById('btnRetake').classList.remove('hidden');
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            imgDisplay.src = canvas.toDataURL('image/jpeg');
+            imgDisplay.classList.remove('hidden');
+            document.getElementById('placeholderDisplay').classList.add('hidden');
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append("file", blob, "webcam_snapshot.jpg");
+                processAPI(formData);
+            }, 'image/jpeg');
+        }
+    </script>
+</body>
+</html>
